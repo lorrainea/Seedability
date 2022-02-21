@@ -8,11 +8,11 @@ Seedability
 <b>OUTPUT</b>: The number of shared seeds and seed length.
 
 ```
-   fprintf ( stdout, " Usage: seedability <options>\n" );
-   fprintf ( stdout, " Standard (Mandatory):\n" );
-   fprintf ( stdout, "  -q, --reads-file	<str>		multiFASTA reads filename.\n" ); 
-   fprintf ( stdout, " Optional:\n" );
-   fprintf ( stdout, "  -r, --ref-file		<str>		FASTA reference filename.\n" );
+Usage: seedability
+Standard (Mandatory):
+-q, --reads-file	<str>		multiFASTA reads filename. 
+Optional:
+-r, --ref-file		<str>		FASTA reference filename.
 ```
 
 <b>License</b>: GNU GPLv3 License
