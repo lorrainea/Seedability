@@ -79,7 +79,7 @@ Usage of the tool
 */
 void usage ( void )
  {
-   fprintf ( stdout, " Usage: SeedFinder <options>\n" );
+   fprintf ( stdout, " Usage: seedability <options>\n" );
    fprintf ( stdout, " Standard (Mandatory):\n" );
    fprintf ( stdout, "  -q, --reads-file		<str>		multiFASTA reads filename.\n" ); 
    fprintf ( stdout, " Optional:\n" );
