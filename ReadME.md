@@ -1,4 +1,4 @@
-Seedability: A tool to determine parameters t (shared seeds) and k (seed length) for faster sequence alignment.
+Seedability
 ===
 
 <b>Installation</b>: To compile Seedability, run make.
