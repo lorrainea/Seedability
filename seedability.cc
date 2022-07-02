@@ -18,9 +18,11 @@
 int main(int argc, char **argv)
 {
 	struct TSwitch  sw;
-	FILE *          in_fd;                 
+	FILE *          in_fd;        
+	FILE *          out_fd;         
         char *          input_ref;        
         char *          input_reads;
+        char *		 output_filename;
 
         unsigned char ** read    = NULL;         // the sequence(s) in memory
         unsigned char ** read_id = NULL;         // the sequence(s) id in memory
@@ -37,7 +39,7 @@ int main(int argc, char **argv)
 
 
 	/* Check the arguments */
-        if ( i < 1 )
+        if ( i < 2 )
         {
                 usage ();
                 return ( 1 );
@@ -47,11 +49,13 @@ int main(int argc, char **argv)
 
                 input_reads       = sw . input_reads;
                 input_ref	  = sw . input_ref;
+                output_filename           = sw . output_filename;
 		if ( input_reads == NULL )
 		{
 			fprintf ( stderr, " Error: Cannot open reads file for input!\n" );
 			return ( 1 );
 		}
+		
 
         }
 
@@ -250,7 +254,14 @@ int main(int argc, char **argv)
 	int matches = 0;
 	int total_len = 0;
 	int errors = 0;
-		
+	
+	if ( ! ( out_fd = fopen ( output_filename, "w") ) )
+	{
+		fprintf ( stderr, " Error: Cannot open file %s!\n", output_filename );
+		return ( 1 );
+	}
+
+
 	if( sw . input_ref != NULL )
 	{
 		
@@ -270,19 +281,21 @@ int main(int argc, char **argv)
 			
 			for(int q = q_gram_size; q>=3; q--)
 			{
-				Seed result =   q_gram_distance( ref_id, read_id[i], ref, read[i], seed, sw, q );	
-				if( result.alignment > best_alignment )
+				if( contains_qgram(ref, read[j], sw, q ) == true )
 				{
-					best_alignment  = result.alignment;
-					final_alignment = result.alignment;
-					final_shared = result.shared_seeds;
-					final_k = result.k;
-					matches = result.matches;
-					total_len  = result.total_length;
-					errors = result.errors;
-				}
+					Seed result =   q_gram_distance( ref_id, read_id[i], ref, read[i], seed, sw, q );	
 					
-	
+					if( result.alignment > best_alignment && result.shared_seeds >= min( (size_t) 0, strlen( (char*) ref ) - result.k + 1- result.errors * result.k ) )
+					{
+						best_alignment  = result.alignment;
+						final_alignment = result.alignment;
+						final_shared = result.shared_seeds;
+						final_k = result.k;
+						matches = result.matches;
+						total_len  = result.total_length;
+						errors = result.errors;
+					}
+				}
 			}
 			
 				
@@ -293,6 +306,8 @@ int main(int argc, char **argv)
 				f_k = final_k;
 			}
 		}
+		
+		fprintf( out_fd, "%s\t%s\t%d\t%d\n" , ref_id, read_id[i], final_k, final_shared );
 	}			
     	else
     	{
@@ -315,19 +330,21 @@ int main(int argc, char **argv)
 				
 				for(int q =q_gram_size; q>=3; q--)
 				{
-					Seed result =   q_gram_distance( read_id[i], read_id[j], read[i], read[j], seed, sw, q );	
-						
-					if( result.alignment > best_alignment )
+					if( contains_qgram(read[i], read[j], sw, q ) == true )
 					{
-						best_alignment  = result.alignment;
-						final_alignment = result.alignment;
-						final_shared = result.shared_seeds;
-						final_k = result.k;
-						matches = result.matches;
-						total_len  = result.total_length;
-						errors = result.errors;
+						Seed result =   q_gram_distance( read_id[i], read_id[j], read[i], read[j], seed, sw, q );	
+							
+						if( result.alignment > best_alignment && result.shared_seeds >= min( (size_t) 0, strlen( (char*) read[i] ) - result.k + 1- result.errors * result.k ) )
+						{
+							best_alignment  = result.alignment;
+							final_alignment = result.alignment;
+							final_shared = result.shared_seeds;
+							final_k = result.k;
+							matches = result.matches;
+							total_len  = result.total_length;
+							errors = result.errors;
+						}
 					}
-					
 	
 				}
 
@@ -338,8 +355,11 @@ int main(int argc, char **argv)
 					f_s = final_shared;
 					f_k = final_k;
 				}
+				
+				fprintf( out_fd, "%s\t%s\t%d\t%d\n" , read_id[i], read_id[j], final_k, final_shared );
 						
 			}
+			
 		}	
 	}
 	
@@ -369,6 +389,54 @@ int main(int argc, char **argv)
 	}
 
 return 0;
+}
+
+bool contains_qgram(unsigned char * x, unsigned char * y, TSwitch sw, unsigned int q )
+{
+	unordered_map<string, int> * map = new unordered_map<string, int>;
+	bool contains = false;
+	
+	int x_length = strlen( (char*) x );
+	int y_length = strlen( (char*) y );
+	
+	// pos filtering
+	
+	unsigned char * q_gram = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
+		
+	for(int i= 0; i<= x_length - q; i++ ) 
+	{
+		memcpy ( &q_gram[0], &x[i], q );
+				
+		unordered_map<string,int>::iterator it = map->find(reinterpret_cast<char*>(q_gram)); 
+
+					
+		if ( it == map->end() ) 
+		{
+			map->insert( pair<string,int>(reinterpret_cast<char*>(q_gram), 1) );
+		} 
+		else 
+		{
+			it->second = it->second + 1;	
+		}
+				
+	}
+				
+				
+	for(int j = 0; j<= y_length -q; j ++ ) 
+	{
+		memcpy ( &q_gram[0], &y[j], q );
+					
+		unordered_map<string,int>::iterator it = map->find(reinterpret_cast<char*>(q_gram)); 
+
+		if ( it != map->end() ) 
+		{
+			delete( map );
+			return true;
+		}
+	}
+	
+	delete( map );
+	return contains;
 }
 
 

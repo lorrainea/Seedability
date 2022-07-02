@@ -211,7 +211,7 @@ Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char *
 							prev_pos_y = l;
 							matches = matches + 1;
 						}
-						else if( l >= prev_pos_y + q )
+						/*else if( l >= prev_pos_y + q )
 						{
 							
 							if( l == prev_pos_y + q )
@@ -222,7 +222,7 @@ Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char *
 							prev_pos_y = l;
 							matches = matches + q;
 						
-						}
+						}*/
 						else if( l < prev_pos_y + q && l > prev_pos_y ) 
 						{
 							errors = errors + ( l - ( prev_pos_y + q - 1 ) ) ;
@@ -290,7 +290,7 @@ Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char *
 							close_pos = prev_pos_x;
 							matches = matches + q;
 						}
-						else if( l >= prev_pos_y + q )
+						/*else if( l >= prev_pos_y + q )
 						{
 							errors = errors +  (l - (prev_pos_y + q-1 ));
 							prev_pos_x = close_pos;
@@ -299,7 +299,7 @@ Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char *
 							matches = matches + q;
 
 						
-						}
+						}*/
 						else if( l < prev_pos_y + q && l > prev_pos_y ) 
 						{
 							errors = errors + abs(( close_pos - ( (int) prev_pos_x + (int)q -1) ) -( l- ( (int)prev_pos_y + (int)q -1) )) ;

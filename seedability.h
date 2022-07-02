@@ -30,6 +30,4 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 double gettime ( void );
 void usage ( void );
 Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char * x, unsigned char * y, Seed * seed, TSwitch sw, unsigned int q);
-bool naive(unsigned char * x, unsigned char * y, Seed * seed, TSwitch sw );
 bool contains_qgram(unsigned char * x, unsigned char * y, TSwitch sw, unsigned int q );
-unsigned int simple_qgram(unsigned char * x, unsigned char * y, TSwitch sw  );

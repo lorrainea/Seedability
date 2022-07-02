@@ -15,6 +15,7 @@ static struct option long_options[] =
  {
    { "read-file",              	required_argument, NULL, 'r' },
    { "ref-file",        	      	optional_argument, NULL, 'q' },
+   { "output-filename",		required_argument, NULL, 'o' },
    { "help",                    	no_argument,       NULL, 'h' },
    { NULL,                      	0,                 NULL,  0  }
  };
@@ -34,9 +35,10 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    /* initialisation */
    sw -> input_reads           	= NULL;
    sw -> input_ref	          	= NULL;
+   sw -> output_filename		= NULL;
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "r:q:h", long_options, &oi ) ) != -1 ) 
+   while ( ( opt = getopt_long ( argc, argv, "r:q:o:h", long_options, &oi ) ) != -1 ) 
     {
 
       switch ( opt )
@@ -65,7 +67,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
        }
     }
 
-   if ( args < 1 )
+   if ( args < 2 )
      {
        usage ();
        exit ( 1 );
@@ -82,6 +84,7 @@ void usage ( void )
    fprintf ( stdout, " Usage: seedability <options>\n" );
    fprintf ( stdout, " Standard (Mandatory):\n" );
    fprintf ( stdout, "  -q, --reads-file		<str>		multiFASTA reads filename.\n" ); 
+   fprintf ( stdout, "  -o, --output-filename		<str>		Output filename.\n" );
    fprintf ( stdout, " Optional:\n" );
    fprintf ( stdout, "  -r, --ref-file		<str>		FASTA reference filename.\n" );
  }
