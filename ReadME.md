@@ -32,5 +32,13 @@ Optional:
 ./seedability -q ./data/synthetic/reads.fasta -o out_reads
 ./seedability -q ./data/synthetic/reads.fasta -r ref.fasta -o out_reads
 ```
+<b>Experimental Results</b>
+
+<p float="left">
+<img src="https://github.com/lorrainea/Seedability/blob/main/data/synthetic/map-ont_minimap2.png" width="500" height="280" />
+<img src="https://github.com/lorrainea/Seedability/blob/main/data/synthetic/map-ont_seedability.png" width="500" height="280" />
+</p>
+
+The results above show that for datasets ranging from 200bp-15000bp in length and a range of divergences from 5%-25%, the average alignment identity between 100 sequence pairs is higher when using the results output by Seedability along with Minimap2, in comparison to when using the default values of Minimap2. Note that some alignment identities are empty when using the default values of Minimap2.
 
 <b>License</b>: GNU GPLv3 License; Copyright (C) 2022 Lorraine A.K. Ayad, Rayan Chikhi and Solon P. Pissis.
