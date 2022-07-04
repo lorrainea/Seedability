@@ -12,9 +12,9 @@ Column 1: Read_i id or Ref id (if parameter -r is used).
 
 Column 2: Read_j id or Read_i id (if parameter -r is used).
 
-Column 4: Number of shared seeds (t) between sequence pair.
+Column 4: Number of shared seeds (t) between every sequence pair.
 
-Column 5: Length of shared seeds (k) between sequence pair.
+Column 5: Length of shared seeds (k) between every sequence pair.
 
 Seedability will also return on the command line the optimal (k,t) values for all reads.
 
