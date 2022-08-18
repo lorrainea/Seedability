@@ -30,7 +30,7 @@ Optional:
 <b>Examples</b>
 ```
 ./seedability -q ./data/synthetic/reads.fasta -o out_reads.tsv
-./seedability -q ./data/synthetic/reads.fasta -r ref.fasta -o out_reads_ref.tsv
+./seedability -q ./data/synthetic/reads.fasta -r ./data/synthetic/ref.fasta -o out_reads_ref.tsv
 ```
 <b>Experimental Results</b>
 
