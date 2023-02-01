@@ -27,6 +27,8 @@ struct TSwitch
    char               * input_reads;
    char               * output_filename;
    unsigned int         k;
+   unsigned int 	l;
+   double		d;
    
  };
  
@@ -47,4 +49,4 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 double gettime ( void );
 void usage ( void );
 Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char * x, unsigned char * y, Seed * seed, TSwitch sw, unsigned int q);
-bool contains_qgram(unsigned char * x, unsigned char * y, TSwitch sw, unsigned int q );
+bool contains_qgram(unsigned char * x, unsigned char * y, TSwitch sw, unsigned int q, Seed result );

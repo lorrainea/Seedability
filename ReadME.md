@@ -16,8 +16,6 @@ Column 4: Number of shared seeds (t) between every sequence pair.
 
 Column 5: Length of shared seeds (k) between every sequence pair.
 
-Seedability will also return on the command line the optimal (k,t) values for all reads.
-
 ```
 Usage: seedability
 Standard (Mandatory):
@@ -25,6 +23,10 @@ Standard (Mandatory):
 -o, --output-filename	<str>		Output filename.
 Optional:
 -r, --ref-file		<str>		FASTA reference filename.
+-l, --min-k		<int>		Minimum k value to explore (Default: 3).
+-k, --max-k		<int>		Maximum k value to explore (Default: 15).
+-d, --delta		<double>	Threshold allowance between best alignment identity and alignment identity for larger k values (Default: 0.03).
+
 ```
 
 <b>Examples</b>
@@ -39,6 +41,6 @@ Optional:
 <img src="https://github.com/lorrainea/Seedability/blob/main/data/synthetic/map-ont_seedability.png" width="500" height="280" />
 </p>
 
-The results above show that for datasets ranging from 200bp-15000bp in length and a range of divergences from 5%-25%, the average alignment identity between 100 sequence pairs is higher when using the results output by Seedability along with Minimap2, in comparison to when using the default values of Minimap2. Note that some alignment identities are empty when using the default values of Minimap2.
+The results above show that for datasets ranging from 100bp-15000bp in length and a range of divergences from 5%-25%, the average alignment identity between 100 sequence pairs is higher when using the results output by Seedability along with Minimap2, in comparison to when using the default values of Minimap2. Note that some sequences are unmapped when using the default values of Minimap2.
 
 <b>License</b>: GNU GPLv3 License; Copyright (C) 2022 Lorraine A.K. Ayad, Rayan Chikhi and Solon P. Pissis.

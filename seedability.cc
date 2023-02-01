@@ -74,7 +74,22 @@ int main(int argc, char **argv)
 		
 
         }
+        
+        if( sw . l < 1 )
+        {
+        	fprintf ( stderr, " min-k must be greater than 0!\n" );
+		return ( 1 );
+	}
 
+	int max_k = sw . k;
+	int min_k = sw . l;
+	double delta = sw . d;
+	
+	if( delta < 0 )
+	{
+		fprintf( stderr, " Error: Delta threshold cannot be negative!\n");
+		return ( 1 );
+	}
 	double start = gettime();
 
 	/* Read the (Multi)FASTA file in memory */
@@ -271,16 +286,27 @@ int main(int argc, char **argv)
 	int total_len = 0;
 	int errors = 0;
 	
+	for( int i = 0; i<num_read; i++)
+	{
+		if( max_k > strlen( (char*) read[j] ) )
+        	{
+        		fprintf ( stderr, " max-k is larger than read length!\n" );
+			return ( 1 );
+		}
+	}
+	
+	
 	if ( ! ( out_fd = fopen ( output_filename, "w") ) )
 	{
 		fprintf ( stderr, " Error: Cannot open file %s!\n", output_filename );
 		return ( 1 );
 	}
 
-
+	Seed * final_alignments = ( Seed * ) calloc( ( max_k + 1 ) , sizeof( Seed ) );
+	
 	if( sw . input_ref != NULL )
 	{
-		
+			
 		Seed * seed;
 		if ( ( seed = ( Seed * ) calloc ( ( max_q_gram+1 ) , sizeof( Seed ) ) ) == NULL )
 		{
@@ -288,47 +314,78 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		
-
+		if( max_k > strlen ( (char*) ref ) )
+        	{
+        		fprintf ( stderr, " max-k is larger than reference length!\n" );
+			return ( 1 );
+		}
+	
 		for(int i = 0; i< num_read; i++)
 		{
-			int q_gram_size = min( (int) strlen( ( char* ) ref ), min( (int) strlen( (char*) read[i] ), 15 ) );
+			int q_gram_size = min( (int) strlen( ( char* ) ref ), min( (int) strlen( (char*) read[i] ), max_k ) );
 			
 			best_alignment = 0;
 			
-			for(int q = q_gram_size; q>=3; q--)
+			double max_alignment = 0;
+			Seed result;
+				
+			for(int q = q_gram_size; q>=min_k; q--)
 			{
-				if( contains_qgram(ref, read[j], sw, q ) == true )
-				{
-					Seed result =   q_gram_distance( ref_id, read_id[i], ref, read[i], seed, sw, q );	
-					
-					if( result.alignment > best_alignment && result.shared_seeds >= min( (size_t) 0, strlen( (char*) ref ) - result.k + 1- result.errors * result.k ) )
-					{
-						best_alignment  = result.alignment;
-						final_alignment = result.alignment;
-						final_shared = result.shared_seeds;
-						final_k = result.k;
-						matches = result.matches;
-						total_len  = result.total_length;
-						errors = result.errors;
-					}
-				}
+			
+				result =   q_gram_distance( ref_id, read_id[i], ref, read[i], seed, sw, q );	
+				final_alignments[q] = result;
+
 			}
 			
+			
+			for(int a = min_k; a<=max_k; a++)
+			{
+				if( final_alignments[a].alignment > max_alignment )
+				{
+					max_alignment = final_alignments[a].alignment;
+					final_k = final_alignments[a].k;
+						
+				}
+			}
 				
+				
+			best_alignment = final_alignments[final_k].alignment;
+			final_alignment = final_alignments[final_k].alignment;
+			final_shared = final_alignments[final_k].shared_seeds;
+			final_k = final_alignments[final_k].k;
+			matches = final_alignments[final_k].matches;
+			total_len  = final_alignments[final_k].total_length;
+			errors = final_alignments[final_k].errors;
+				
+			for(int a = final_k; a<=max_k; a++)
+			{
+				if( max_alignment - final_alignments[a].alignment <= delta )
+				{
+						
+					best_alignment = final_alignments[a].alignment;
+					final_alignment = final_alignments[a].alignment;
+					final_shared = final_alignments[a].shared_seeds;
+					final_k = final_alignments[a].k;
+					matches = final_alignments[a].matches;
+					total_len  = final_alignments[a].total_length;
+					errors = final_alignments[a].errors;
+						
+				}
+			}
+					
 			if( final_alignment < f_a )
 			{
 				f_a = final_alignment;
 				f_s = final_shared;
 				f_k = final_k;
 			}
+			
 		
 			fprintf( out_fd, "%s\t%s\t%d\t%d\n" , ref_id, read_id[i], final_k, final_shared );
 		}
 	}			
     	else
     	{
-
-	
 		Seed * seed;
 		if ( ( seed = ( Seed * ) calloc ( ( max_q_gram+1 ) , sizeof( Seed ) ) ) == NULL )
 		{
@@ -336,34 +393,61 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		
+		
+		
 		for(int i = 0; i< num_read; i++)
 		{	
 			for(int j = i+1; j<num_read; j++)
 			{
-				int q_gram_size = min( (int) strlen( ( char* ) read[i] ), min( (int) strlen( (char*) read[j] ), 15 ) );
+			
+		
+				int q_gram_size = min( (int) strlen( ( char* ) read[i] ), min( (int) strlen( (char*) read[j] ), max_k ) );
 				best_alignment = 0;
 				
 				
-				for(int q =q_gram_size; q>=3; q--)
+				Seed result;
+				double max_alignment = 0;
+				
+				for(int q =q_gram_size; q>=min_k; q--)
 				{
-					if( contains_qgram(read[i], read[j], sw, q ) == true )
-					{
-						Seed result =   q_gram_distance( read_id[i], read_id[j], read[i], read[j], seed, sw, q );	
-							
-						if( result.alignment > best_alignment && result.shared_seeds >= min( (size_t) 0, strlen( (char*) read[i] ) - result.k + 1- result.errors * result.k ) )
-						{
-							best_alignment  = result.alignment;
-							final_alignment = result.alignment;
-							final_shared = result.shared_seeds;
-							final_k = result.k;
-							matches = result.matches;
-							total_len  = result.total_length;
-							errors = result.errors;
-						}
-					}
-	
+					result =   q_gram_distance( read_id[i], read_id[j], read[i], read[j], seed, sw, q );	
+					final_alignments[q] = result;
+				
 				}
 
+			
+				for(int a = min_k; a<=max_k; a++)
+				{
+					if( final_alignments[a].alignment > max_alignment )
+					{
+						max_alignment = final_alignments[a].alignment;
+						final_k = final_alignments[a].k;
+					}
+				}
+				
+				best_alignment = final_alignments[final_k].alignment;
+				final_alignment = final_alignments[final_k].alignment;
+				final_shared = final_alignments[final_k].shared_seeds;
+				final_k = final_alignments[final_k].k;
+				matches = final_alignments[final_k].matches;
+				total_len  = final_alignments[final_k].total_length;
+				errors = final_alignments[final_k].errors;
+				
+				for(int a = final_k; a<=max_k; a++)
+				{
+				
+					if( max_alignment - final_alignments[a].alignment <= delta )
+					{	
+						best_alignment = final_alignments[a].alignment;
+						final_alignment = final_alignments[a].alignment;
+						final_shared = final_alignments[a].shared_seeds;
+						final_k = final_alignments[a].k;
+						matches = final_alignments[a].matches;
+						total_len  = final_alignments[a].total_length;
+						errors = final_alignments[a].errors;
+						
+					}
+				}
 					
 				if( final_alignment < f_a )
 				{
@@ -379,10 +463,9 @@ int main(int argc, char **argv)
 		}	
 	}
 	
+	//printf ( "%d\t%d\t%2f\n" , f_k, f_s, f_a);
 	
-	printf ( "%d\t%d\n" , f_k, f_s );
-	
-
+	free( final_alignments );
 	double end = gettime();
         fprintf( stderr, "Elapsed time: %lf secs.\n", end - start );
 
@@ -407,52 +490,6 @@ int main(int argc, char **argv)
 return 0;
 }
 
-bool contains_qgram(unsigned char * x, unsigned char * y, TSwitch sw, unsigned int q )
-{
-	unordered_map<string, int> * map = new unordered_map<string, int>;
-	bool contains = false;
-	
-	int x_length = strlen( (char*) x );
-	int y_length = strlen( (char*) y );
-	
-	// pos filtering
-	
-	unsigned char * q_gram = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-		
-	for(int i= 0; i<= x_length - q; i++ ) 
-	{
-		memcpy ( &q_gram[0], &x[i], q );
-				
-		unordered_map<string,int>::iterator it = map->find(reinterpret_cast<char*>(q_gram)); 
 
-					
-		if ( it == map->end() ) 
-		{
-			map->insert( pair<string,int>(reinterpret_cast<char*>(q_gram), 1) );
-		} 
-		else 
-		{
-			it->second = it->second + 1;	
-		}
-				
-	}
-				
-				
-	for(int j = 0; j<= y_length -q; j ++ ) 
-	{
-		memcpy ( &q_gram[0], &y[j], q );
-					
-		unordered_map<string,int>::iterator it = map->find(reinterpret_cast<char*>(q_gram)); 
-
-		if ( it != map->end() ) 
-		{
-			delete( map );
-			return true;
-		}
-	}
-	
-	delete( map );
-	return contains;
-}
 
 

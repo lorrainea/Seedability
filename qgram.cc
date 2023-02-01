@@ -27,42 +27,35 @@
 #include <sys/time.h>
 #include <omp.h>
 #include "seedability.h"
-			
+		
+	
 Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char * x, unsigned char * y, Seed * seed, TSwitch sw, unsigned int q)
 {
 
 	bool threshold_met = false;
 	
 	unsigned char * xq_gram = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-	unsigned char * prev_xq_gram = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-	
 	unsigned char * yq_gram = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-	unsigned char * prev_yq_gram = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-	
-	unordered_map<string, vector<int>> * map = new unordered_map<string, vector<int>>;
+
+	unordered_map<string, vector<int>> * xmap = new unordered_map<string, vector<int>>;
 	unordered_map<string, vector<int>> * ymap = new unordered_map<string, vector<int>>;
 		
 	int x_length = strlen( (char*) x );
 	int y_length = strlen( (char*) y );
+	
 	unordered_map<string,vector<int>>::iterator it;
 
 	int shared = 0;
 	int errors =0;
 	int matches = 0;
-	unsigned int prev_pos_x = 0;
-	unsigned int prev_pos_y = 0;
-	bool first = true;
 	bool close = false;
-	bool init = true;
+	
 	int last_x = 0;
 	int last_y = 0;
-	int close_pos = 0;
-	int closest_dist = max( x_length, y_length);
-	
-	for(int j = 0; j<= y_length -q; j ++ ) 
-	{
-	
-			
+
+    
+	for(int j = 0; j<= y_length-q; j++ ) 
+	{		
 		memcpy ( &yq_gram[0], &y[j], q );				
 		it = ymap->find(reinterpret_cast<char*>(yq_gram));
 		if ( it == ymap->end() ) 
@@ -70,276 +63,211 @@ Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char *
 		else it->second.push_back( j );			
 	}
 	
-	for(int j = 0; j<=x_length-q; j++)
+	for(int j = 0; j<= x_length-q; j++)
 	{
 		memcpy( &xq_gram[0], &x[j], q );
-		it = map->find(reinterpret_cast<char*>(xq_gram)); 
-		if ( it == map->end() ) 
-			map->insert( pair<string,vector<int>>(reinterpret_cast<char*>(xq_gram), { j}));
+		it = xmap->find(reinterpret_cast<char*>(xq_gram)); 
+		if ( it == xmap->end() ) 
+			xmap->insert( pair<string,vector<int>>(reinterpret_cast<char*>(xq_gram), { j}));
 		else it->second.push_back( j );
 	}
 	
-	for(int i =0; i<=x_length - q; i++)
-	{
-		
-		for(int l = 0; l<= y_length -q; l ++ ) 
-		{
-			memcpy ( &yq_gram[0], &y[l], q );
-			unordered_map<string,vector<int>>::iterator it = map->find(reinterpret_cast<char*>(yq_gram)); 
-			
-				
-			if ( it != map->end() ) 
-			{
-				close = false;
-				close_pos = 0;
-				closest_dist = max( x_length,  y_length);
-				bool miss = true;
-
-				for(int pos=0; pos<it->second.size(); pos++)
-				{
-					int dist = abs( it->second.at(pos) - l );
-					
-					
-					if(  dist <= closest_dist  )
-					{
-						if(  it->second.at(pos) == prev_pos_x+1 && l == prev_pos_y+1 )
-						{
-							
-							close = true;
-							close_pos = it->second.at(pos);
-							last_x = close_pos;
-							last_y = l;
-							closest_dist = dist;
-							
-						}
-						else if( dist < closest_dist && dist >= q-1 && it->second.at(pos) > prev_pos_x )
-						{
-							unsigned char * temp = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-							unsigned char * tempx = ( unsigned char * ) calloc( ( q + 1 ) , sizeof( unsigned char ) );
-							memcpy ( &temp[0], &x[it->second.at(pos)+q], q );
-							memcpy ( &tempx[0], &y[l+q], q );
-							
-							if(  strcmp((const char*)temp,(const char*)tempx) == 1 )
-							{
-								miss = false;
-								break;
-							}
-							
-							memcpy ( &temp[0], &x[it->second.at(pos)], q );
-							memcpy ( &tempx[0], &y[l], q );
-							
-							unordered_map<string,vector<int>>::iterator it2 = ymap->find(reinterpret_cast<char*>(temp)); 
-							unordered_map<string,vector<int>>::iterator it3 = map->find(reinterpret_cast<char*>(tempx)); 
-								
-							if ( it2 != ymap->end() ) 
-							{	
-									
-								for(int pos2=0; pos2<it2->second.size(); pos2++)
-								{	
-									int dist2 = abs( it2->second.at(pos2)  - it->second.at(pos));
-									
-									if( dist2 <= dist && it2->second.at(pos2) > l &&  it2->second.at(pos2) < y_length -1)
-									{
-									
-										miss = false;
-										break;
-									}
-								}
-							}
-							if ( miss == true )
-							{	
-								if ( it3 !=map->end() )
-								{
-									for(int pos2=0; pos2<it3->second.size(); pos2++)
-									{	
-											
-										if( it3->second.at(pos2) < it->second.at(pos) && it3->second.at(pos2) > prev_pos_x )
-										{
-											miss = false;
-											break;
-										}
-									}
-									
-									
-									
-								}
-								
-							}
-							if( miss == true )
-							{
-								
-								close = true;
-								close_pos = it->second.at(pos);
-								last_x = close_pos;
-								last_y = l;
-								closest_dist = dist;
-							}
-							free( temp );
-							free( tempx );
-						}
-						else if ( close_pos > 0 )
-						{
-								
-							if( dist <= closest_dist &&  it->second.at(pos) > prev_pos_x && it->second.at(pos) -prev_pos_x < close_pos - prev_pos_x )						
-							{
-								close = true;
-								close_pos = it->second.at(pos);
-								last_x = close_pos;
-								last_y = l;
-								closest_dist = dist;
-							}
-							
-							
-						}
-						else if( dist <= closest_dist &&  it->second.at(pos) > prev_pos_x || init == true )
-						{
-							close = true;
-							close_pos = it->second.at(pos);
-							last_x = close_pos;
-							last_y = l;
-							closest_dist = dist;
-							init = false;
-										
-						}	
-					}
-				}
-							
-				if( close == true )
-				{
-						
-					if( first == true )
-					{
-						if( max( close_pos , l ) > 0 )
-							errors = errors + max( close_pos , l ); 
-						
-						first = false;
-							
-						prev_pos_y = l;
-						prev_pos_x = close_pos;
-						shared = shared + 1;
-						matches = matches + q;
-					} 
-					else if( close_pos == prev_pos_x + 1)
-					{	
-						if( l == prev_pos_y + 1 )
-						{
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches + 1;
-						}
-						/*else if( l >= prev_pos_y + q )
-						{
-							
-							if( l == prev_pos_y + q )
-								errors = errors + ( l - ( prev_pos_y + q - 1 ) );
-							else errors = errors + ( l - ( prev_pos_y + q + 1 ) );
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches + q;
-						
-						}*/
-						else if( l < prev_pos_y + q && l > prev_pos_y ) 
-						{
-							errors = errors + ( l - ( prev_pos_y + q - 1 ) ) ;
-								
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches + q;
-							
-						} 
-								
-																		
-					}
-					else if( close_pos >= prev_pos_x + q   )
-					{	
-						
-						if( l == prev_pos_y + 1 )
-						{
-								
-							errors = errors + ( close_pos - ( prev_pos_x + q -1) ) ;
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches + q;
-						}
-						else if( l >= prev_pos_y + q )
-						{
+	int prev_pos_x = -1;
+	int prev_pos_y = -1;
 	
-							if( abs( ( close_pos -(int) prev_pos_x ) - ( l - (int)prev_pos_y )) == 0 )
-								errors = errors + ( close_pos - ( (int) prev_pos_x + (int)q) );
-									
-							else errors = errors + max(( close_pos - ( (int) prev_pos_x + (int)q ) ),( l- ( (int)prev_pos_y + (int)q ) )) ;
-				
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches +q;
-						
-						
-						}
-						else if( l < prev_pos_y + q && l > prev_pos_y ) 
-						{
-							errors = errors + ( close_pos - ( prev_pos_x + q -1) ) ;
-								
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l; 
-							matches = matches + q;
-							
-						} 
-							
-								
-					}	
-					else if( close_pos < prev_pos_x + q && close_pos > prev_pos_x  )
-					{	
-						
-						
-						if( l == prev_pos_y + 1 )
-						{
-							
-							errors = errors + ( close_pos - ( prev_pos_x + 1 ) ) ;
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							close_pos = prev_pos_x;
-							matches = matches + q;
-						}
-						/*else if( l >= prev_pos_y + q )
-						{
-							errors = errors +  (l - (prev_pos_y + q-1 ));
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches + q;
+	bool first = true;
+	
+	for(int l = 0; l<= x_length-q; l++ ) 
+	{
+		memcpy ( &xq_gram[0], &x[l], q );
+		unordered_map<string,vector<int>>::iterator it = ymap->find(reinterpret_cast<char*>(xq_gram)); 
 
-						
-						}*/
-						else if( l < prev_pos_y + q && l > prev_pos_y ) 
-						{
-							errors = errors + abs(( close_pos - ( (int) prev_pos_x + (int)q -1) ) -( l- ( (int)prev_pos_y + (int)q -1) )) ;
-								
-							prev_pos_x = close_pos;
-							shared = shared + 1;
-							prev_pos_y = l;
-							matches = matches + q;
-							
-						}
+		int diff_first = max( x_length,  y_length);
+		int diff_second = max( x_length,  y_length);
+
+		int last_y_final = 0;
+		int last_x_final = 0;
+		
+		int last_x_x = 0;
+		int last_y_x = 0;
+		
+		int last_x_y =0 ;
+		int last_y_y = 0;
+		
+		last_x = 0;
+		last_y = 0;
+		
+		
+		int prev_pos_x_x = 0;
+		int prev_pos_y_x = 0;
+		
+		int prev_pos_x_y = 0;
+		int prev_pos_y_y = 0;
+		
+		
+		if ( it != ymap->end() ) 
+		{
+			for(int pos=0; pos<it->second.size(); pos++)
+			{	
+				
+				if( abs( (it->second.at(pos) - prev_pos_y ) - (l - prev_pos_x) ) > q )
+					continue;
+		
+				if( it->second.at(pos) == prev_pos_y+1 && l == prev_pos_x+1 )
+				{
+					close = true;
+					last_y_x = it->second.at(pos);
+					last_x_x = l;
+					diff_first = 0;	
+					break;	
+				}
+				else if( it->second.at(pos) >= prev_pos_y+q )
+				{
+					int diff = abs( (it->second.at(pos) - (int) prev_pos_y) - ( l - prev_pos_x ) );
+					
+				
+					if(  diff < diff_first )
+					{
+						diff_first = diff;
+			
+						last_x_x = l;
+						last_y_x = it->second.at(pos);
 					}
 				}
+				
 			}
+			
+			for(int pos=0; pos<it->second.size(); pos++)
+				if( it->second.at(pos) <= prev_pos_y )
+					it->second.erase(it->second.begin()+pos);
+		
+			for(int j = prev_pos_y+1 ; j<=last_y_x; j++)
+			{	
+				memcpy ( &yq_gram[0], &y[j], q );
+				unordered_map<string,vector<int>>::iterator it = xmap->find(reinterpret_cast<char*>(yq_gram)); 
+						
+				if ( it != xmap->end() ) 
+				{
+					for(int pos=0; pos<it->second.size(); pos++)
+					{		
+								
+						if( abs( (it->second.at(pos) - prev_pos_x ) - (j - prev_pos_y) ) > q )
+							continue;
+								
+						if(  it->second.at(pos) >= prev_pos_x+q )
+						{
+							int diff = abs( (it->second.at(pos) - (int) prev_pos_x) - ( j - prev_pos_y ) );
+									
+							if( diff < diff_first )
+							{
+								diff_second = diff;
+							
+								last_y_y = j;
+								last_x_y = it->second.at(pos);
+
+											
+							}
+						}
+						
+					}
+					
+					for(int pos=0; pos<it->second.size(); pos++)
+						if( it->second.at(pos) <= prev_pos_x )
+							it->second.erase(it->second.begin()+pos);
+			
+				}
+				
+			}
+		
+			if( diff_first <= diff_second && diff_first <= q )
+			{
+				last_x = last_x_x;
+				last_y = last_y_x;		
+			}
+			else if( diff_second <=q )
+			{
+				last_x = last_x_y;
+				last_y = last_y_y;
+			}
+			
+			if( diff_first <= q  || diff_second <=q  )
+			{				
+				if( last_x == prev_pos_x + 1)
+				{	
+					if( last_y == prev_pos_y + 1 )
+					{
+						prev_pos_x = last_x;
+						shared = shared + 1;
+						prev_pos_y = last_y;
+						if ( first == true )
+						 matches = matches + q;
+						else matches = matches + 1;
+						
+					}
+					else if( last_y > prev_pos_y  )
+					{
+						if( last_y == prev_pos_y + q )
+							errors = errors + ( last_y - ( prev_pos_y + q - 1 ) );
+						else errors = errors + ( last_y - ( prev_pos_y + q + 1 ) );
+						prev_pos_x = last_x;
+						shared = shared + 1;
+						prev_pos_y = last_y;
+						matches = matches + q;		
+					}
+													
+				}
+				else if( last_x >= prev_pos_x + q   )
+				{		
+					
+					if( last_y == prev_pos_y + 1 )
+					{		
+						errors = errors + ( last_x - ( prev_pos_x + q -1) ) ;
+						prev_pos_x = last_x;
+						shared = shared + 1;
+						prev_pos_y = last_y;
+						matches = matches + q;
+					}
+					else if( last_y >= prev_pos_y + q )
+					{
+					
+						if( abs( ( last_x -(int) prev_pos_x ) - ( last_y - (int)prev_pos_y )) == 0 )
+							errors = errors + ( last_x - ( (int) prev_pos_x + (int)q) );
+										
+						else errors = errors + max(( last_x - ( (int) prev_pos_x + (int)q ) ),( last_y - ( (int)prev_pos_y + (int)q ) )) ;
+					
+						prev_pos_x = last_x;
+						shared = shared + 1;
+						prev_pos_y = last_y;
+						matches = matches +q;
+								
+					}
+						
+				}	
+				
+			}
+			
+			if ( first == true )
+			{
+				errors = max( last_x , last_y ) ;
+				first = false;
+			}
+			
 		}
 	}	
+	
 		
-		
-	if( last_x + q -1  <  x_length - 1  ||   last_y + q -1  <  y_length - 1  )
-		errors = errors + min( x_length - (last_x + q -1 ) , y_length- (last_y + q - 1 )  );
+	if( prev_pos_x + q -1  <  x_length - 1  ||   prev_pos_y + q -1  <  y_length - 1  )
+		errors = errors + max( x_length - (prev_pos_x + q -1 ) , y_length- (prev_pos_y + q - 1 )  );
 	
 	double alignment = (matches * 1.0) / ((errors + matches)*1.0);
 
 	Seed result;
+	result.k = q;
+	result.matches = 0;
+	result.errors = x_length;
+	result.alignment = 0;
+	result.total_length = 0;
+	result.shared_seeds = 0;		
 	result.k = q;
 	result.matches = matches;
 	result.errors = errors;
@@ -347,13 +275,12 @@ Seed q_gram_distance(unsigned char * x_id, unsigned char * y_id, unsigned char *
 	result.total_length = errors+matches;
 	result.shared_seeds = shared;
 	
-	delete( map );
+	
+	delete( xmap );
 	delete( ymap );
 	
 	free( xq_gram );
-	free( prev_xq_gram );
 	free( yq_gram );
-	free( prev_yq_gram );
 
 return result;
 }
