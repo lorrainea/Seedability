@@ -25,7 +25,7 @@ Optional:
 -r, --ref-file		<str>		FASTA reference filename.
 -l, --min-k		<int>		Minimum k value to explore (Default: 3).
 -k, --max-k		<int>		Maximum k value to explore (Default: 15).
--d, --delta		<double>	Threshold allowance between best alignment identity and alignment identity for larger k values (Default: 0.03).
+-d, --delta		<double>	Threshold allowance between best alignment identity and alignment identity for larger k values (Default: 0.05).
 
 ```
 
