@@ -43,4 +43,10 @@ Optional:
 
 The results above show that for datasets ranging from 100bp-15000bp in length and a range of divergences from 5%-25%, the average alignment identity between 100 sequence pairs is higher when using the results output by Seedability along with Minimap2, in comparison to when using the default values of Minimap2. Note that some sequences are unmapped when using the default values of Minimap2.
 
+<b>Citation</b>:
+```
+Lorraine A K Ayad and others, Seedability: Optimising alignment parameters for sensitive sequence comparison, Bioinformatics Advances, 2023;, vbad108, https://doi.org/10.1093/bioadv/vbad108
+```
+
 <b>License</b>: GNU GPLv3 License; Copyright (C) 2023 Lorraine A.K. Ayad, Rayan Chikhi and Solon P. Pissis.
+
