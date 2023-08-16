@@ -45,7 +45,7 @@ The results above show that for datasets ranging from 100bp-15000bp in length an
 
 <b>Citation</b>:
 ```
-Lorraine A K Ayad and others, Seedability: Optimising alignment parameters for sensitive sequence comparison, Bioinformatics Advances, 2023;, vbad108, https://doi.org/10.1093/bioadv/vbad108
+Lorraine A. K. Ayad, Rayan Chikhi and Solon P. Pissis, Seedability: Optimising alignment parameters for sensitive sequence comparison, Bioinformatics Advances, 2023; vbad108, https://doi.org/10.1093/bioadv/vbad108
 ```
 
 <b>License</b>: GNU GPLv3 License; Copyright (C) 2023 Lorraine A.K. Ayad, Rayan Chikhi and Solon P. Pissis.
